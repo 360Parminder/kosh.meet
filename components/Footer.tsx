@@ -1,6 +1,15 @@
+"use client";
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export default function Footer() {
+  const pathname = usePathname();
+
+  if (pathname?.startsWith('/room/')) {
+    return null;
+  }
+
   return (
     <footer className="w-full bg-[#0a0a0a]/80 backdrop-blur-xl text-white mt-24 border-t border-white/10">
       <div className="max-w-[1300px] mx-auto px-6 md:px-12 py-7 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-4">
