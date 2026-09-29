@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { ParticipantRole } from '@prisma/client';
+import { ParticipantRole } from '@360parminder/db';
 
 export async function POST(req: NextRequest) {
   try {

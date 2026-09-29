@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { generateRoomId } from '@/lib/livekit';
-import { MeetingType, MeetingStatus } from '@prisma/client';
+import { MeetingType, MeetingStatus } from '@360parminder/db';
 
 export async function GET(req: NextRequest) {
   try {

@@ -9,10 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@360parminder/db": "github:360Parminder/kosh.db#v1.0.0",
     "@livekit/components-react": "^2.9.24",
     "@livekit/components-styles": "^1.2.0",
     "@prisma/client": "5.22.0",
-    "@yourorg/db": "github:360Parminder/kosh.db#v1.0.0",
     "livekit-client": "^2.22.3",
     "livekit-server-sdk": "^2.19.1",
     "lucide-react": "^1.48.0",
