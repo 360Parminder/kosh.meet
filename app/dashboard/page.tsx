@@ -1,5 +1,5 @@
 export const metadata = {
-  title: 'Dashboard | Nexus',
+  title: 'Dashboard | Kosh Meet',
 };
 
 export default function Dashboard() {
