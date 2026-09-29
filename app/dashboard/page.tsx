@@ -1,215 +1,433 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  Calendar as CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
   Video,
   Plus,
-  ArrowRight,
-  Server,
-  Zap,
-  ShieldCheck,
-  Radio,
+  Clock,
   Copy,
   Check,
-  Layers,
+  Trash2,
+  ExternalLink,
+  Sparkles,
 } from 'lucide-react';
-import { generateRoomId, SFU_ARCHITECTURE_DETAILS } from '@/lib/livekit';
+import MeetTopNav from '@/components/dashboard/MeetTopNav';
+import MeetSidebar from '@/components/dashboard/MeetSidebar';
+import MeetingEmptyIllustration from '@/components/dashboard/MeetingEmptyIllustration';
+import MeetingLinkModal from '@/components/dashboard/MeetingLinkModal';
+import ScheduleMeetingModal, { ScheduledMeeting } from '@/components/dashboard/ScheduleMeetingModal';
+import UpgradeModal from '@/components/dashboard/UpgradeModal';
+import SettingsModal from '@/components/dashboard/SettingsModal';
+import { generateRoomId } from '@/lib/livekit';
 
-export default function Dashboard() {
+interface WeekDayItem {
+  name: string; // "MON", "TUE", etc.
+  dayNumber: number; // 28, 29, 30, 1, etc.
+  dateKey: string; // "2026-09-29"
+  fullLabel: string; // "Tue 29 Sept"
+}
+
+export default function DashboardPage() {
   const router = useRouter();
-  const [joinCode, setJoinCode] = useState('');
-  const [copiedPersonal, setCopiedPersonal] = useState(false);
 
-  const personalRoomId = 'kosh-my-room';
+  // Navigation tab
+  const [activeTab, setActiveTab] = useState<'meetings' | 'calls'>('meetings');
 
+  // Calendar week offset (0 = current week, -1 = last week, 1 = next week)
+  const [weekOffset, setWeekOffset] = useState(0);
+
+  // Selected date key
+  const [selectedDateKey, setSelectedDateKey] = useState<string>('2026-09-29');
+
+  // Modals state
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [createdRoomId, setCreatedRoomId] = useState('');
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+
+  // Scheduled meetings
+  const [meetings, setMeetings] = useState<ScheduledMeeting[]>([]);
+  const [copiedMeetingId, setCopiedMeetingId] = useState<string | null>(null);
+
+  // Load saved meetings on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('kosh_meet_scheduled');
+      if (saved) {
+        try {
+          setMeetings(JSON.parse(saved));
+        } catch (e) {
+          console.error('Failed to parse scheduled meetings:', e);
+        }
+      }
+    }
+  }, []);
+
+  // Save meetings to localStorage
+  const saveMeetings = (updated: ScheduledMeeting[]) => {
+    setMeetings(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('kosh_meet_scheduled', JSON.stringify(updated));
+    }
+  };
+
+  // Generate current week days based on base date Tuesday Sep 29, 2026 + weekOffset
+  const getWeekDays = (offset: number): WeekDayItem[] => {
+    // Reference date: Tue Sep 29, 2026
+    const baseDate = new Date(2026, 8, 29); // Month is 0-indexed (8 = September)
+    const baseDayOfWeek = baseDate.getDay(); // 2 for Tuesday
+
+    // Find Monday of the base week
+    const monday = new Date(baseDate);
+    monday.setDate(baseDate.getDate() - (baseDayOfWeek === 0 ? 6 : baseDayOfWeek - 1) + offset * 7);
+
+    const weekDays: WeekDayItem[] = [];
+    const dayNames = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
+    const fullDayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    for (let i = 0; i < 7; i++) {
+      const current = new Date(monday);
+      current.setDate(monday.getDate() + i);
+
+      const dayNumber = current.getDate();
+      const monthIndex = current.getMonth();
+      const year = current.getFullYear();
+      const dateKey = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
+      const fullLabel = `${fullDayNames[current.getDay()]} ${dayNumber} ${monthNames[monthIndex]}`;
+
+      weekDays.push({
+        name: dayNames[i],
+        dayNumber,
+        dateKey,
+        fullLabel,
+      });
+    }
+
+    return weekDays;
+  };
+
+  const currentWeekDays = getWeekDays(weekOffset);
+  const selectedDayObj = currentWeekDays.find((d) => d.dateKey === selectedDateKey) || currentWeekDays[1] || currentWeekDays[0];
+
+  // Actions
   const handleStartInstant = () => {
     const newRoomId = generateRoomId();
     router.push(`/room/${newRoomId}`);
   };
 
-  const handleJoinByCode = (e: React.FormEvent) => {
-    e.preventDefault();
-    let cleaned = joinCode.trim();
-    if (!cleaned) return;
-
-    // Handle full URL pasted (e.g. http://localhost:3000/room/abc-xyz)
-    if (cleaned.includes('/room/')) {
-      const parts = cleaned.split('/room/');
-      cleaned = parts[parts.length - 1];
-    }
-
-    router.push(`/room/${cleaned}`);
+  const handleCreateLater = () => {
+    const newRoomId = generateRoomId();
+    setCreatedRoomId(newRoomId);
+    setIsLinkModalOpen(true);
   };
 
-  const handleCopyPersonal = () => {
+  const handleSchedule = () => {
+    setIsScheduleModalOpen(true);
+  };
+
+  const handleJoinCode = (rawCode: string) => {
+    let clean = rawCode.trim();
+    if (clean.includes('/room/')) {
+      const parts = clean.split('/room/');
+      clean = parts[parts.length - 1];
+    }
+    router.push(`/room/${clean}`);
+  };
+
+  const handleSaveScheduled = (newMtg: ScheduledMeeting) => {
+    const updated = [...meetings, newMtg];
+    saveMeetings(updated);
+  };
+
+  const handleDeleteMeeting = (id: string) => {
+    const updated = meetings.filter((m) => m.id !== id);
+    saveMeetings(updated);
+  };
+
+  const handleCopyMeetingLink = (roomId: string, id: string) => {
     if (typeof window !== 'undefined') {
-      const url = `${window.location.origin}/room/${personalRoomId}`;
-      navigator.clipboard.writeText(url);
-      setCopiedPersonal(true);
-      setTimeout(() => setCopiedPersonal(false), 2000);
+      const link = `${window.location.origin}/room/${roomId}`;
+      navigator.clipboard.writeText(link);
+      setCopiedMeetingId(id);
+      setTimeout(() => setCopiedMeetingId(null), 2000);
     }
   };
+
+  // Filter meetings for the selected day
+  const meetingsForSelectedDay = meetings.filter((m) => m.dateKey === selectedDayObj.dateKey);
 
   return (
-    <div className="container mx-auto px-6" style={{ paddingTop: '7rem', minHeight: '85vh', paddingBottom: '4rem' }}>
-      {/* Dashboard Top Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="px-3 py-1 rounded-full bg-orange-500/20 text-orange-300 text-xs font-semibold border border-orange-500/30 flex items-center gap-1.5">
-              <Radio className="w-3 h-3 text-orange-400 animate-pulse" />
-              SFU WebRTC Engine
-            </span>
-          </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white">
-            Meeting Dashboard
-          </h1>
-          <p className="text-white/70 text-sm sm:text-base mt-1">
-            Ultra-low latency audio & video powered by Selective Forwarding Unit architecture.
-          </p>
-        </div>
+    <div className="relative z-50 min-h-screen w-full bg-white text-[#1f1f1f] flex flex-col font-sans select-none antialiased">
+      {/* Modals */}
+      <MeetingLinkModal
+        isOpen={isLinkModalOpen}
+        onClose={() => setIsLinkModalOpen(false)}
+        roomId={createdRoomId}
+      />
+      <ScheduleMeetingModal
+        isOpen={isScheduleModalOpen}
+        onClose={() => setIsScheduleModalOpen(false)}
+        selectedDateKey={selectedDayObj.dateKey}
+        onSaveMeeting={handleSaveScheduled}
+      />
+      <UpgradeModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+      />
+      <SettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+      />
 
-        {/* Start Instant Meeting Button */}
-        <button
-          onClick={handleStartInstant}
-          className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold px-6 py-3.5 rounded-2xl flex items-center gap-2 shadow-lg shadow-orange-500/25 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer self-start md:self-auto text-sm"
-        >
-          <Plus className="w-4 h-4" />
-          <span>New Instant Meeting</span>
-        </button>
-      </div>
+      {/* Google Meet Top Navigation Bar */}
+      <MeetTopNav
+        onStartInstant={handleStartInstant}
+        onCreateLater={handleCreateLater}
+        onSchedule={handleSchedule}
+        onOpenSettings={() => setIsSettingsModalOpen(true)}
+        onOpenUpgrade={() => setIsUpgradeModalOpen(true)}
+        onJoinCode={handleJoinCode}
+      />
 
-      {/* Main Interactive Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
-        {/* Quick Action: Join with Code */}
-        <div className="lg:col-span-6 glass-panel rounded-2xl p-6 bg-black/40 border border-white/15">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2.5 rounded-xl bg-orange-500/20 text-orange-400">
-              <Video className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-white">Join a Meeting</h2>
-              <p className="text-xs text-white/60">Enter a room code or meeting link to connect</p>
-            </div>
-          </div>
+      {/* Main Workspace with Sidebar */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Sidebar (Meetings / Calls) */}
+        <MeetSidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
-          <form onSubmit={handleJoinByCode} className="space-y-3">
-            <div className="relative">
-              <input
-                type="text"
-                value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value)}
-                placeholder="e.g. abc-defg-hij or paste room link"
-                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm font-medium pr-28"
-              />
+        {/* Center Content Body */}
+        <main className="flex-1 overflow-y-auto px-6 sm:px-10 lg:px-16 py-6 md:py-8 flex flex-col max-w-6xl mx-auto w-full">
+          {activeTab === 'meetings' ? (
+            <>
+              {/* Row 1: Date Title & Calendar Strip */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                {/* Left: Date Title */}
+                <div className="flex items-center gap-2 text-[#1f1f1f]">
+                  <h1 className="text-xl sm:text-2xl font-normal tracking-tight">
+                    {selectedDayObj.fullLabel}
+                  </h1>
+                  <button
+                    type="button"
+                    onClick={() => setIsScheduleModalOpen(true)}
+                    className="p-1 rounded-full text-[#444746] hover:bg-[#f0f4f9] hover:text-[#1f1f1f] transition-colors"
+                    title="Open calendar picker"
+                  >
+                    <CalendarIcon className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Right: Weekday Navigation Strip */}
+                <div className="flex items-center gap-1 sm:gap-2">
+                  {/* Previous Week Chevron */}
+                  <button
+                    type="button"
+                    onClick={() => setWeekOffset((prev) => prev - 1)}
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-[#444746] hover:bg-[#f0f4f9] transition-colors"
+                    title="Previous week"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+
+                  {/* Day Columns */}
+                  <div className="flex items-center gap-1">
+                    {currentWeekDays.map((day) => {
+                      const isSelected = day.dateKey === selectedDayObj.dateKey;
+                      return (
+                        <button
+                          key={day.dateKey}
+                          type="button"
+                          onClick={() => setSelectedDateKey(day.dateKey)}
+                          className={`flex flex-col items-center justify-center min-w-10 sm:min-w-12 py-1 px-1.5 rounded-full sm:rounded-2xl transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-[#c2e7ff] text-[#001d35] font-semibold'
+                              : 'text-[#444746] hover:bg-[#f0f4f9]'
+                          }`}
+                        >
+                          <span className="text-[10px] sm:text-[11px] font-medium tracking-wider">
+                            {day.name}
+                          </span>
+                          <span
+                            className={`text-sm sm:text-base mt-0.5 ${
+                              isSelected ? 'font-bold text-[#001d35]' : 'font-normal text-[#1f1f1f]'
+                            }`}
+                          >
+                            {day.dayNumber}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Next Week Chevron */}
+                  <button
+                    type="button"
+                    onClick={() => setWeekOffset((prev) => prev + 1)}
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-[#444746] hover:bg-[#f0f4f9] transition-colors"
+                    title="Next week"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Row 2: Premium Meet Features Promo Banner */}
+              <div className="w-full border border-[#e1e3e1] rounded-2xl p-4 sm:p-5 bg-white shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                {/* Left: Google 1 / AI badge & text */}
+                <div className="flex items-center gap-3.5">
+                  {/* Google "1" / AI Circle Icon */}
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-blue-500 p-0.5 flex items-center justify-center shrink-0">
+                    <div className="w-full h-full bg-white rounded-full flex items-center justify-center text-[#0b57d0] font-bold text-xs">
+                      1
+                    </div>
+                  </div>
+
+                  <div>
+                    <h2 className="text-sm font-semibold text-[#1f1f1f]">
+                      Unlock premium Meet features
+                    </h2>
+                    <p className="text-xs text-[#444746] mt-0.5">
+                      Enjoy longer group video calls, noise cancellation and more with a Google AI Plus 2 TB plan.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Right: Explore Plan Link */}
+                <button
+                  type="button"
+                  onClick={() => setIsUpgradeModalOpen(true)}
+                  className="text-xs sm:text-sm font-medium text-[#0b57d0] hover:text-[#0842a0] hover:underline self-start sm:self-auto cursor-pointer shrink-0"
+                >
+                  Explore plan
+                </button>
+              </div>
+
+              {/* Row 3: Main Schedule Content (Empty State or Scheduled Cards) */}
+              {meetingsForSelectedDay.length === 0 ? (
+                /* Empty State (Exact match to screenshot) */
+                <div className="flex-1 flex flex-col items-center justify-center py-8 sm:py-14 text-center">
+                  {/* Vector Illustration */}
+                  <div className="mb-4">
+                    <MeetingEmptyIllustration />
+                  </div>
+
+                  {/* Title & Subtitle */}
+                  <h2 className="text-2xl sm:text-[28px] font-normal text-[#1f1f1f] tracking-tight">
+                    No meetings scheduled for today
+                  </h2>
+                  <p className="text-sm text-[#444746] mt-2 mb-7 font-normal">
+                    Schedule a meeting or enjoy the free time
+                  </p>
+
+                  {/* Mint Green "+ New" Button */}
+                  <div className="relative group">
+                    <button
+                      type="button"
+                      onClick={() => setIsScheduleModalOpen(true)}
+                      className="h-11 px-6 bg-[#c2e7d6] hover:bg-[#b0d8c4] active:bg-[#a0cbb5] text-[#002116] rounded-full font-medium text-sm flex items-center gap-2 transition-all shadow-xs cursor-pointer select-none"
+                    >
+                      <div className="relative flex items-center justify-center">
+                        <Video className="w-4 h-4 fill-current text-[#002116]" />
+                        <Plus className="w-2.5 h-2.5 absolute -top-1 -right-1.5 stroke-[3]" />
+                      </div>
+                      <span>New</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Scheduled Meetings List */
+                <div className="flex-1 space-y-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-semibold text-[#1f1f1f]">
+                      Scheduled Calls ({meetingsForSelectedDay.length})
+                    </h3>
+                    <button
+                      onClick={() => setIsScheduleModalOpen(true)}
+                      className="text-xs text-[#0b57d0] hover:underline flex items-center gap-1 font-medium"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Add another meeting
+                    </button>
+                  </div>
+
+                  {meetingsForSelectedDay.map((mtg) => (
+                    <div
+                      key={mtg.id}
+                      className="p-4 sm:p-5 rounded-2xl border border-[#e1e3e1] bg-white hover:border-[#c2e7ff] hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="p-3 rounded-xl bg-[#c2e7ff] text-[#001d35] shrink-0">
+                          <Video className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="text-base font-semibold text-[#1f1f1f]">{mtg.title}</h4>
+                          <div className="flex items-center gap-3 text-xs text-[#444746] mt-1">
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3.5 h-3.5 text-[#0b57d0]" />
+                              {mtg.startTime} - {mtg.endTime}
+                            </span>
+                            <span>•</span>
+                            <span className="font-mono text-[#5f6368]">Room: {mtg.roomId}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 self-end sm:self-center">
+                        <button
+                          onClick={() => handleCopyMeetingLink(mtg.roomId, mtg.id)}
+                          className="p-2 rounded-lg text-[#444746] hover:bg-[#f0f4f9] hover:text-[#0b57d0] transition-colors"
+                          title="Copy meeting link"
+                        >
+                          {copiedMeetingId === mtg.id ? (
+                            <Check className="w-4 h-4 text-emerald-600" />
+                          ) : (
+                            <Copy className="w-4 h-4" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteMeeting(mtg.id)}
+                          className="p-2 rounded-lg text-[#444746] hover:bg-red-50 hover:text-red-600 transition-colors"
+                          title="Delete meeting"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => router.push(`/room/${mtg.roomId}`)}
+                          className="px-5 py-2 rounded-full bg-[#0b57d0] hover:bg-[#0842a0] text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
+                        >
+                          <span>Join</span>
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            /* Calls Tab Content */
+            <div className="flex-1 flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-16 h-16 rounded-full bg-[#c2e7ff] text-[#001d35] flex items-center justify-center mb-4">
+                <Video className="w-8 h-8" />
+              </div>
+              <h2 className="text-xl font-normal text-[#1f1f1f]">No recent direct calls</h2>
+              <p className="text-sm text-[#444746] mt-1 mb-6 max-w-sm">
+                Start a video call with anyone using an instant room link powered by SFU WebRTC.
+              </p>
               <button
-                type="submit"
-                disabled={!joinCode.trim()}
-                className="absolute right-1.5 top-1.5 bottom-1.5 px-4 rounded-lg bg-white text-black font-semibold text-xs hover:bg-neutral-200 disabled:opacity-40 transition-all flex items-center gap-1 cursor-pointer"
+                type="button"
+                onClick={handleStartInstant}
+                className="px-6 py-2.5 rounded-full bg-[#0b57d0] hover:bg-[#0842a0] text-white text-sm font-medium transition-colors shadow-xs"
               >
-                <span>Join</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                Start an instant call
               </button>
             </div>
-          </form>
-
-          {/* Personal Meeting Room Link */}
-          <div className="mt-6 pt-5 border-t border-white/10 flex items-center justify-between text-xs">
-            <div className="text-white/70">
-              <div className="font-semibold text-white">Personal Meeting Room</div>
-              <div className="font-mono text-white/50 text-[11px] truncate">{personalRoomId}</div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleCopyPersonal}
-                className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white transition-colors"
-                title="Copy personal link"
-              >
-                {copiedPersonal ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              </button>
-              <button
-                onClick={() => router.push(`/room/${personalRoomId}`)}
-                className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white font-medium text-xs transition-colors"
-              >
-                Start
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* SFU Architecture Snapshot */}
-        <div className="lg:col-span-6 glass-panel rounded-2xl p-6 bg-black/40 border border-white/15">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400">
-              <Server className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-white">SFU Architecture Status</h2>
-              <p className="text-xs text-white/60">LiveKit Selective Forwarding Unit</p>
-            </div>
-          </div>
-
-          <div className="space-y-3 text-xs">
-            <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-white/80">
-                <Layers className="w-4 h-4 text-orange-400" />
-                <span>Media Routing Topology</span>
-              </div>
-              <span className="font-semibold text-emerald-400">Single Uplink (O(1))</span>
-            </div>
-
-            <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-white/80">
-                <Zap className="w-4 h-4 text-amber-400" />
-                <span>Transcoding Overhead</span>
-              </div>
-              <span className="font-semibold text-white">Zero (Packet Forwarding)</span>
-            </div>
-
-            <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-white/80">
-                <ShieldCheck className="w-4 h-4 text-blue-400" />
-                <span>Signaling & Cryptography</span>
-              </div>
-              <span className="font-semibold text-white">JWT Access Grants</span>
-            </div>
-          </div>
-
-          <p className="mt-4 text-[11px] text-white/60 leading-relaxed">
-            {SFU_ARCHITECTURE_DETAILS.description}
-          </p>
-        </div>
-      </div>
-
-      {/* Architecture Highlights Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="glass-panel p-5 rounded-xl bg-white/5 border border-white/10">
-          <h3 className="text-sm font-semibold text-white mb-1 flex items-center gap-1.5">
-            <Zap className="w-4 h-4 text-orange-400" /> Scalable Calls
-          </h3>
-          <p className="text-xs text-white/70">
-            Unlike peer-to-peer mesh which crashes beyond 4 users, SFU smoothly handles 50+ participants.
-          </p>
-        </div>
-
-        <div className="glass-panel p-5 rounded-xl bg-white/5 border border-white/10">
-          <h3 className="text-sm font-semibold text-white mb-1 flex items-center gap-1.5">
-            <Layers className="w-4 h-4 text-emerald-400" /> Adaptive Simulcast
-          </h3>
-          <p className="text-xs text-white/70">
-            Dynamically sends multiple video resolutions so users on weak connections still receive smooth video.
-          </p>
-        </div>
-
-        <div className="glass-panel p-5 rounded-xl bg-white/5 border border-white/10">
-          <h3 className="text-sm font-semibold text-white mb-1 flex items-center gap-1.5">
-            <Server className="w-4 h-4 text-amber-400" /> Flexible Backend
-          </h3>
-          <p className="text-xs text-white/70">
-            Ready to connect to LiveKit Cloud or a self-hosted Docker container in 1 line of config.
-          </p>
-        </div>
+          )}
+        </main>
       </div>
     </div>
   );
