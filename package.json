@@ -12,7 +12,6 @@
     "@360parminder/db": "github:360Parminder/kosh.db#v1.0.0",
     "@livekit/components-react": "^2.9.24",
     "@livekit/components-styles": "^1.2.0",
-    "@prisma/client": "5.22.0",
     "livekit-client": "^2.22.3",
     "livekit-server-sdk": "^2.19.1",
     "lucide-react": "^1.48.0",
@@ -28,7 +27,6 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.6",
-    "prisma": "5.22.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
