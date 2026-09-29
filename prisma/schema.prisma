@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MeetingType {
+  INSTANT
+  LATER
+  SCHEDULED
+}
+
+enum MeetingStatus {
+  SCHEDULED
+  ACTIVE
+  ENDED
+  CANCELLED
+}
+
+enum ParticipantRole {
+  HOST
+  CO_HOST
+  ATTENDEE
+  VIEWER
+}
+
+model Meeting {
+  id              String         @id @default(cuid())
+  title           String
+  description     String?
+  roomCode        String         @unique
+  dateKey         String         // e.g. "2026-09-29"
+  startTime       String         // e.g. "10:00"
+  endTime         String         // e.g. "10:30"
+  startsAt        DateTime
+  endsAt          DateTime
+  type            MeetingType    @default(SCHEDULED)
+  status          MeetingStatus  @default(SCHEDULED)
+  hostId          String?
+  hostName        String?        @default("Host")
+  hostEmail       String?
+  maxParticipants Int            @default(50)
+  isLocked        Boolean        @default(false)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  participants    MeetingParticipant[]
+  recordings      MeetingRecording[]
+
+  @@index([dateKey])
+  @@index([status])
+  @@index([hostId])
+}
+
+model MeetingParticipant {
+  id              String          @id @default(cuid())
+  meetingId       String
+  meeting         Meeting         @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  identity        String
+  name            String?
+  role            ParticipantRole @default(ATTENDEE)
+  joinedAt        DateTime        @default(now())
+  leftAt          DateTime?
+  durationSeconds Int?
+
+  @@index([meetingId])
+  @@index([identity])
+}
+
+model MeetingRecording {
+  id              String   @id @default(cuid())
+  meetingId       String
+  meeting         Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  storageKey      String?
+  fileUrl         String?
+  durationSeconds Int?
+  fileSizeBytes   BigInt?
+  status          String   @default("processing")
+  createdAt       DateTime @default(now())
+
+  @@index([meetingId])
+}

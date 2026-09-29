@@ -62,6 +62,7 @@ export default function MeetingRoom({ roomId, serverUrl, isConfigured }: Meeting
 
   // Meeting duration timer
   const [duration, setDuration] = useState(0);
+  const participantIdRef = useRef<string | null>(null);
 
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
@@ -71,6 +72,28 @@ export default function MeetingRoom({ roomId, serverUrl, isConfigured }: Meeting
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Register participant in Prisma database
+  useEffect(() => {
+    if (localParticipant?.identity) {
+      fetch('/api/meetings/participant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomCode: roomId,
+          identity: localParticipant.identity,
+          name: localParticipant.name || localParticipant.identity,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.participantId) {
+            participantIdRef.current = data.participantId;
+          }
+        })
+        .catch((err) => console.warn('Prisma participant logging deferred:', err));
+    }
+  }, [localParticipant?.identity, roomId]);
 
   // Format seconds to mm:ss or hh:mm:ss
   const formatDuration = (totalSeconds: number) => {
@@ -113,6 +136,16 @@ export default function MeetingRoom({ roomId, serverUrl, isConfigured }: Meeting
   };
 
   const handleLeave = () => {
+    if (participantIdRef.current) {
+      fetch('/api/meetings/participant', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          participantId: participantIdRef.current,
+          durationSeconds: duration,
+        }),
+      }).catch(() => {});
+    }
     try {
       room.disconnect();
     } catch (e) {

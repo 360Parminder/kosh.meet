@@ -115,16 +115,85 @@ export default function DashboardPage() {
   const currentWeekDays = getWeekDays(weekOffset);
   const selectedDayObj = currentWeekDays.find((d) => d.dateKey === selectedDateKey) || currentWeekDays[1] || currentWeekDays[0];
 
+  // Load meetings from Prisma backend (with localStorage cache fallback)
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchMeetings() {
+      try {
+        const res = await fetch(`/api/meetings?dateKey=${selectedDayObj.dateKey}`);
+        const data = await res.json();
+        if (isMounted && data.success && Array.isArray(data.meetings)) {
+          const mapped: ScheduledMeeting[] = data.meetings.map((m: {
+            id: string;
+            title: string;
+            dateKey: string;
+            startTime: string;
+            endTime: string;
+            roomCode: string;
+          }) => ({
+            id: m.id,
+            title: m.title,
+            dateKey: m.dateKey,
+            startTime: m.startTime,
+            endTime: m.endTime,
+            roomId: m.roomCode,
+          }));
+
+          setMeetings((prev) => {
+            // Keep any other days and update selected day
+            const otherDays = prev.filter((item) => item.dateKey !== selectedDayObj.dateKey);
+            return [...otherDays, ...mapped];
+          });
+        }
+      } catch (err) {
+        console.warn('Prisma API fetch deferred, using cached meetings:', err);
+      }
+    }
+
+    fetchMeetings();
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedDayObj.dateKey]);
+
   // Actions
-  const handleStartInstant = () => {
+  const handleStartInstant = async () => {
     const newRoomId = generateRoomId();
+    try {
+      await fetch('/api/meetings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: 'Instant Meeting',
+          roomCode: newRoomId,
+          type: 'INSTANT',
+          dateKey: selectedDayObj.dateKey,
+        }),
+      });
+    } catch (e) {
+      console.warn('Instant meeting DB sync deferred:', e);
+    }
     router.push(`/room/${newRoomId}`);
   };
 
-  const handleCreateLater = () => {
+  const handleCreateLater = async () => {
     const newRoomId = generateRoomId();
     setCreatedRoomId(newRoomId);
     setIsLinkModalOpen(true);
+    try {
+      await fetch('/api/meetings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: 'Meeting for Later',
+          roomCode: newRoomId,
+          type: 'LATER',
+          dateKey: selectedDayObj.dateKey,
+        }),
+      });
+    } catch (e) {
+      console.warn('Meeting for later DB sync deferred:', e);
+    }
   };
 
   const handleSchedule = () => {
@@ -140,14 +209,46 @@ export default function DashboardPage() {
     router.push(`/room/${clean}`);
   };
 
-  const handleSaveScheduled = (newMtg: ScheduledMeeting) => {
+  const handleSaveScheduled = async (newMtg: ScheduledMeeting) => {
+    // Optimistic UI update
     const updated = [...meetings, newMtg];
     saveMeetings(updated);
+
+    try {
+      const res = await fetch('/api/meetings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newMtg.title,
+          roomCode: newMtg.roomId,
+          dateKey: newMtg.dateKey,
+          startTime: newMtg.startTime,
+          endTime: newMtg.endTime,
+          type: 'SCHEDULED',
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.meeting) {
+        // Update with server ID
+        setMeetings((prev) =>
+          prev.map((m) => (m.id === newMtg.id ? { ...m, id: data.meeting.id } : m))
+        );
+      }
+    } catch (e) {
+      console.warn('Meeting save to Prisma deferred:', e);
+    }
   };
 
-  const handleDeleteMeeting = (id: string) => {
+  const handleDeleteMeeting = async (id: string) => {
+    // Optimistic UI update
     const updated = meetings.filter((m) => m.id !== id);
     saveMeetings(updated);
+
+    try {
+      await fetch(`/api/meetings/${id}`, { method: 'DELETE' });
+    } catch (e) {
+      console.warn('Meeting delete in Prisma deferred:', e);
+    }
   };
 
   const handleCopyMeetingLink = (roomId: string, id: string) => {

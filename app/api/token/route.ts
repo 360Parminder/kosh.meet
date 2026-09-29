@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createParticipantToken } from '@/lib/livekit';
+import { prisma } from '@/lib/prisma';
 
 export async function GET(req: NextRequest) {
   try {
@@ -17,7 +18,39 @@ export async function GET(req: NextRequest) {
 
     const isConfigured = Boolean(apiKey && apiSecret && apiKey !== 'devkey');
 
+    // Generate SFU access token
     const token = await createParticipantToken(room, username, username);
+
+    // Auto-record or update meeting in Prisma DB if available
+    try {
+      const existing = await prisma.meeting.findUnique({ where: { roomCode: room } });
+      if (!existing) {
+        const today = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const startStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        await prisma.meeting.create({
+          data: {
+            title: `Instant Call (${room})`,
+            roomCode: room,
+            dateKey: today,
+            startTime: startStr,
+            endTime: '23:59',
+            startsAt: now,
+            endsAt: new Date(now.getTime() + 2 * 60 * 60 * 1000),
+            type: 'INSTANT',
+            status: 'ACTIVE',
+          },
+        });
+      } else if (existing.status === 'SCHEDULED') {
+        await prisma.meeting.update({
+          where: { id: existing.id },
+          data: { status: 'ACTIVE' },
+        });
+      }
+    } catch (dbErr) {
+      // Non-fatal if DB is not yet connected
+      console.warn('Prisma meeting auto-registration deferred:', dbErr);
+    }
 
     return NextResponse.json({
       token,
