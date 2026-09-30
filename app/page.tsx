@@ -42,7 +42,7 @@ export default function Home() {
             className="flex flex-wrap items-center justify-center gap-4"
           >
             <Link
-              href="/dashboard"
+              href="/login"
               className="bg-white text-neutral-950 font-semibold px-8 py-3.5 rounded-full hover:bg-neutral-100 hover:scale-105 active:scale-95 transition-all shadow-lg text-base no-underline cursor-pointer"
             >
               Sign In

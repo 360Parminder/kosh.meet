@@ -8,7 +8,11 @@ import { usePathname } from 'next/navigation';
 export default function Header() {
   const pathname = usePathname();
 
-  if (pathname?.startsWith('/room/') || pathname?.startsWith('/dashboard')) {
+  if (
+    pathname?.startsWith('/room/') ||
+    pathname?.startsWith('/dashboard') ||
+    pathname?.startsWith('/login')
+  ) {
     return null;
   }
 
@@ -50,7 +54,7 @@ export default function Header() {
 
           {/* Sign In button */}
           <Link
-            href="/dashboard"
+            href="/login"
             className="bg-white text-black px-5 py-2 rounded-[14px] font-semibold text-[14px] flex items-center gap-2 hover:bg-gray-100 transition-colors no-underline"
           >
             Sign In

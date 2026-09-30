@@ -50,9 +50,57 @@ export default function DashboardPage() {
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
+  // Authentication state
+  const [currentUser, setCurrentUser] = useState<{ id: string; name: string; email: string; avatar?: string } | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
   // Scheduled meetings
   const [meetings, setMeetings] = useState<ScheduledMeeting[]>([]);
   const [copiedMeetingId, setCopiedMeetingId] = useState<string | null>(null);
+
+  // Verify authentication on mount
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/auth/me');
+        const data = await res.json();
+        if (data.authenticated && data.user) {
+          setCurrentUser(data.user);
+          setAuthLoading(false);
+          return;
+        }
+      } catch (e) {
+        console.warn('Auth check deferred:', e);
+      }
+
+      // Check localStorage fallback
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('kosh_meet_user');
+        if (saved) {
+          try {
+            setCurrentUser(JSON.parse(saved));
+            setAuthLoading(false);
+            return;
+          } catch (e) {}
+        }
+      }
+
+      // If neither, redirect to login
+      router.push('/login');
+    }
+
+    checkAuth();
+  }, [router]);
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (e) {}
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('kosh_meet_user');
+    }
+    router.push('/login');
+  };
 
   // Load saved meetings on mount
   useEffect(() => {
@@ -294,6 +342,8 @@ export default function DashboardPage() {
         onOpenSettings={() => setIsSettingsModalOpen(true)}
         onOpenUpgrade={() => setIsUpgradeModalOpen(true)}
         onJoinCode={handleJoinCode}
+        currentUser={currentUser}
+        onLogout={handleLogout}
       />
 
       {/* Main Workspace with Sidebar */}

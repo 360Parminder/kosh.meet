@@ -11,6 +11,8 @@ import {
   HelpCircle,
   Settings,
   Grip,
+  LogOut,
+  User as UserIcon,
 } from 'lucide-react';
 
 interface MeetTopNavProps {
@@ -20,6 +22,8 @@ interface MeetTopNavProps {
   onOpenSettings: () => void;
   onOpenUpgrade: () => void;
   onJoinCode: (code: string) => void;
+  currentUser?: { name: string; email: string; avatar?: string } | null;
+  onLogout?: () => void;
 }
 
 export default function MeetTopNav({
@@ -29,15 +33,22 @@ export default function MeetTopNav({
   onOpenSettings,
   onOpenUpgrade,
   onJoinCode,
+  currentUser,
+  onLogout,
 }: MeetTopNavProps) {
   const [code, setCode] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const accountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
+      }
+      if (accountRef.current && !accountRef.current.contains(event.target as Node)) {
+        setIsAccountOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -212,14 +223,51 @@ export default function MeetTopNav({
           <Grip className="w-5 h-5" />
         </button>
 
-        {/* User Profile Avatar */}
-        <div className="ml-1">
-          <div
-            className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#3e2723] to-[#5d4037] border border-white shadow-xs flex items-center justify-center text-white font-semibold text-sm cursor-pointer select-none ring-2 ring-transparent hover:ring-[#d3e3fd]"
+        {/* User Profile Avatar & Account Menu */}
+        <div className="ml-1 relative" ref={accountRef}>
+          <button
+            type="button"
+            onClick={() => setIsAccountOpen((prev) => !prev)}
+            className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#3e2723] to-[#5d4037] border border-white shadow-xs flex items-center justify-center text-white font-semibold text-sm cursor-pointer select-none ring-2 ring-transparent hover:ring-[#d3e3fd] transition-all"
             title="Google Account"
           >
-            P
-          </div>
+            {currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'P'}
+          </button>
+
+          {/* Google Account Profile Dropdown */}
+          {isAccountOpen && (
+            <div className="absolute right-0 top-12 w-76 bg-white rounded-3xl shadow-2xl border border-[#dadce0] p-5 z-50 animate-fade-in text-[#1f1f1f]">
+              <div className="flex flex-col items-center text-center pb-4 border-b border-[#e1e3e1]">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#3e2723] to-[#5d4037] flex items-center justify-center text-white font-bold text-2xl shadow-inner mb-3">
+                  {currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'P'}
+                </div>
+                <div className="text-base font-medium text-[#1f1f1f]">
+                  {currentUser?.name || 'Parminder Singh'}
+                </div>
+                <div className="text-xs text-[#5f6368] mt-0.5 font-normal">
+                  {currentUser?.email || 'parminder@kosh.com'}
+                </div>
+
+                <div className="mt-3.5 px-4 py-1.5 rounded-full border border-[#dadce0] text-xs font-medium text-[#1f1f1f] hover:bg-[#f8fafd] transition-colors cursor-pointer">
+                  Manage your Google Account
+                </div>
+              </div>
+
+              <div className="pt-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAccountOpen(false);
+                    if (onLogout) onLogout();
+                  }}
+                  className="w-full px-4 py-2.5 rounded-xl hover:bg-[#f0f4f9] text-left text-sm font-medium text-red-600 flex items-center gap-2.5 transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Sign out</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </header>
