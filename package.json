@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@360parminder/auth": "github:360Parminder/kosh.auth#v1.0.0",
     "@360parminder/db": "file:../../../Brave/shared-db/360parminder-db-1.0.0.tgz",
     "@livekit/components-react": "^2.9.24",
     "@livekit/components-styles": "^1.2.0",
