@@ -65,6 +65,10 @@ export default function DashboardPage() {
         const res = await fetch('/api/auth/me');
         const data = await res.json();
         if (data.authenticated && data.user) {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('kosh_meet_user', JSON.stringify(data.user));
+            localStorage.setItem('kosh_meet_username', data.user.name || data.user.username);
+          }
           setCurrentUser(data.user);
           setAuthLoading(false);
           return;

@@ -1,9 +1,27 @@
 "use client";
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'motion/react';
 
 export default function Home() {
+  const router = useRouter();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedUser = localStorage.getItem('kosh_meet_user');
+      if (savedUser) {
+        try {
+          JSON.parse(savedUser);
+          router.push('/dashboard');
+        } catch (e) {
+          // invalid JSON, ignore
+        }
+      }
+    }
+  }, [router]);
+
   return (
     <div className="w-full">
       {/* Hero Section */}
