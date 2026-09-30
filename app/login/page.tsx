@@ -2,8 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Eye, EyeOff, Loader2, Sparkles, Check, AlertCircle, Video } from 'lucide-react';
+import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,12 +12,6 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const handleQuickLogin = (demoEmail: string) => {
-    setEmail(demoEmail);
-    setPassword('kosh@secure123');
-    setError(null);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,139 +50,98 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative z-50 min-h-screen w-full bg-[#f0f4f9] text-[#1f1f1f] flex flex-col justify-between items-center p-4 sm:p-6 font-sans select-none">
-      {/* Centered Sign-In Card */}
-      <div className="my-auto w-full max-w-[448px] bg-white rounded-3xl p-8 sm:p-10 border border-[#dadce0] shadow-sm flex flex-col">
-        {/* Kosh Meet Logo & Header */}
-        <div className="flex flex-col items-start mb-6">
-          <div className="w-12 h-12 mb-4 flex items-center justify-center bg-[#0b57d0] rounded-xl text-white">
-            <Video className="w-7 h-7" />
-          </div>
+    <div className="flex min-h-screen w-full bg-[#0a0a0a] text-white font-sans selection:bg-orange-500/30">
+      {/* Left Panel - Hidden on small screens */}
+      <div className="hidden lg:flex w-1/2 p-4">
+        <div className="relative w-full h-full rounded-[32px] overflow-hidden flex flex-col items-center justify-center bg-gradient-to-br from-[#f59e0b] via-[#ea580c] to-[#9a3412]">
+          {/* Noise texture overlay */}
+          <div 
+            className="absolute inset-0 opacity-[0.15] mix-blend-overlay pointer-events-none" 
+            style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}
+          ></div>
+          
+          {/* Radial glow */}
+          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-white/20 blur-[120px] rounded-full pointer-events-none"></div>
 
-          <h1 className="text-2xl sm:text-3xl font-normal text-[#1f1f1f] tracking-tight">
-            Sign in
-          </h1>
-          <p className="text-sm text-[#444746] mt-1.5 font-normal">
-            to continue to <span className="font-medium text-[#1f1f1f]">Kosh Meet</span>
-          </p>
-        </div>
-
-        {/* Quick Login Auto-fill Chip */}
-        <div className="mb-6 p-3 rounded-2xl bg-[#c2e7ff]/30 border border-[#c2e7ff] flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 text-xs text-[#001d35]">
-            <Sparkles className="w-4 h-4 text-[#0b57d0] shrink-0" />
-            <span>
-              Demo user: <strong>parminder@kosh.com</strong>
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={() => handleQuickLogin('parminder@kosh.com')}
-            className="text-[11px] font-semibold text-[#0b57d0] hover:bg-[#c2e7ff] px-2.5 py-1 rounded-full transition-colors shrink-0"
-          >
-            Autofill
-          </button>
-        </div>
-
-        {/* Error Alert */}
-        {error && (
-          <div className="mb-5 p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        {/* Login Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Email / Username Input */}
-          <div>
-            <label className="block text-xs font-medium text-[#444746] mb-1.5">
-              Email or phone
-            </label>
-            <input
-              type="text"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="e.g. parminder@kosh.com"
-              className="w-full h-13 px-4 rounded-xl border border-[#747775] focus:border-[#0b57d0] focus:ring-2 focus:ring-[#0b57d0]/20 outline-none text-[#1f1f1f] text-sm transition-all bg-white"
-            />
-          </div>
-
-          {/* Password Input */}
-          <div>
-            <label className="block text-xs font-medium text-[#444746] mb-1.5">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                className="w-full h-13 px-4 pr-12 rounded-xl border border-[#747775] focus:border-[#0b57d0] focus:ring-2 focus:ring-[#0b57d0]/20 outline-none text-[#1f1f1f] text-sm transition-all bg-white"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-[#5f6368] hover:text-[#1f1f1f] transition-colors"
-                title={showPassword ? 'Hide password' : 'Show password'}
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
+          {/* Content */}
+          <div className="relative z-10 flex flex-col items-center text-center px-8">
+            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-8 shadow-2xl">
+              <svg viewBox="0 0 24 24" className="w-10 h-10 text-orange-500 fill-current">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm3.88 12.88L14.46 16l-3.3-3.3-1.06 1.06V16H8V8h2.1v4.7l4.36-4.36L15.88 9l-3.3 3.3 3.3 2.58z" />
+              </svg>
             </div>
+            <h1 className="text-4xl font-bold text-white mb-4 tracking-tight drop-shadow-sm">Welcome Back</h1>
+            <p className="text-white/90 text-[17px] max-w-sm leading-relaxed drop-shadow-sm font-medium">
+              Sign in to access your dashboard, manage domains, and view your inbox.
+            </p>
           </div>
+        </div>
+      </div>
 
-          <div className="pt-2">
-            <span className="text-xs text-[#0b57d0] hover:underline cursor-pointer font-medium">
-              Forgot password?
-            </span>
-          </div>
+      {/* Right Panel - Login Form */}
+      <div className="flex-1 flex flex-col items-center justify-center p-8 sm:p-12 lg:p-24 relative">
+        <div className="w-full max-w-[400px]">
+          <h2 className="text-[32px] font-bold text-white mb-2 tracking-tight">Sign In</h2>
+          <p className="text-[#a1a1aa] text-[15px] mb-10">Enter your credentials to continue.</p>
 
-          {/* Notice */}
-          <div className="pt-3 text-xs text-[#444746] leading-relaxed">
-            Not your computer? Use Guest mode to sign in privately.{' '}
-            <span className="text-[#0b57d0] hover:underline cursor-pointer">Learn more</span>
-          </div>
+          {/* Error Alert */}
+          {error && (
+            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+              <span className="leading-relaxed">{error}</span>
+            </div>
+          )}
 
-          {/* Bottom Form Actions */}
-          <div className="pt-6 flex items-center justify-between">
-            <button
-              type="button"
-              onClick={() => handleQuickLogin('parminder@kosh.com')}
-              className="text-sm font-medium text-[#0b57d0] hover:text-[#0842a0] hover:underline cursor-pointer"
-            >
-              Create account
-            </button>
+          {/* Login Form */}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-2">
+              <label className="text-[13px] font-semibold text-white/90 tracking-wide">Email Address</label>
+              <input
+                type="text"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@company.com"
+                className="w-full h-12 px-4 rounded-xl bg-[#131316] border border-white/5 text-white placeholder-[#52525b] focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors outline-none text-[15px]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-[13px] font-semibold text-white/90 tracking-wide">Password</label>
+                <button type="button" className="text-[13px] font-semibold text-orange-500 hover:text-orange-400 transition-colors">
+                  Forgot password?
+                </button>
+              </div>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  className="w-full h-12 px-4 pr-12 rounded-xl bg-[#131316] border border-white/5 text-white placeholder-[#52525b] focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors outline-none text-[15px]"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-[#52525b] hover:text-white/80 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-[18px] h-[18px]" /> : <Eye className="w-[18px] h-[18px]" />}
+                </button>
+              </div>
+            </div>
 
             <button
               type="submit"
               disabled={loading || !email.trim() || !password}
-              className="h-11 px-7 rounded-full bg-[#0b57d0] hover:bg-[#0842a0] active:bg-[#06337a] disabled:opacity-50 text-white font-medium text-sm transition-all shadow-xs flex items-center gap-2 cursor-pointer"
+              className="w-full h-12 rounded-xl bg-[#f97316] hover:bg-[#ea580c] active:bg-[#c2410c] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-[15px] transition-all mt-4 flex items-center justify-center gap-2"
             >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Signing in...</span>
-                </>
-              ) : (
-                <span>Next</span>
-              )}
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign in'}
             </button>
-          </div>
-        </form>
-      </div>
-
-      {/* Page Footer */}
-      <footer className="w-full max-w-[448px] flex items-center justify-between text-xs text-[#444746] py-3">
-        <span>English (United States)</span>
-        <div className="flex items-center gap-4">
-          <span className="hover:text-[#1f1f1f] cursor-pointer">Help</span>
-          <span className="hover:text-[#1f1f1f] cursor-pointer">Privacy</span>
-          <span className="hover:text-[#1f1f1f] cursor-pointer">Terms</span>
+          </form>
         </div>
-      </footer>
+      </div>
     </div>
   );
 }

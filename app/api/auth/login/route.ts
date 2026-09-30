@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AuthUser, DEMO_USER, setSessionCookie } from '@/lib/auth';
+import { AuthUser, setSessionCookie } from '@/lib/auth';
+import { prisma } from '@360parminder/db';
+import bcrypt from 'bcryptjs';
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,30 +24,48 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Determine user profile
-    let user: AuthUser;
+    // Fetch user from DB
+    const dbUser = await prisma.users.findFirst({
+      where: {
+        OR: [
+          { email: identifier },
+          { username: identifier }
+        ]
+      }
+    });
 
-    if (
-      identifier.toLowerCase() === 'parminder@kosh.com' ||
-      identifier.toLowerCase() === 'parminder'
-    ) {
-      user = DEMO_USER;
-    } else {
-      const parts = identifier.split('@');
-      const uname = parts[0];
-      const name = uname
-        .split(/[._-]/)
-        .map((s: string) => s.charAt(0).toUpperCase() + s.slice(1))
-        .join(' ');
-
-      user = {
-        id: `usr_${Math.random().toString(36).substring(2, 9)}`,
-        name: name || 'Google User',
-        email: identifier.includes('@') ? identifier : `${uname}@kosh.com`,
-        username: uname,
-        avatar: DEMO_USER.avatar,
-      };
+    if (!dbUser) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid credentials' },
+        { status: 401 }
+      );
     }
+
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(password, dbUser.password_hash);
+
+    if (!isPasswordValid) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid credentials' },
+        { status: 401 }
+      );
+    }
+
+    if (dbUser.is_banned) {
+      return NextResponse.json(
+        { success: false, error: 'This account has been banned' },
+        { status: 403 }
+      );
+    }
+
+    // Create session user object
+    const user: AuthUser = {
+      id: dbUser.id,
+      name: dbUser.name || dbUser.username,
+      email: dbUser.email || `${dbUser.username}@kosh.com`,
+      username: dbUser.username,
+      avatar: dbUser.avatar || 'https://res.cloudinary.com/dvo4tvvgb/image/upload/v1737770516/Profile/image.jpg',
+    };
 
     const res = NextResponse.json({
       success: true,
