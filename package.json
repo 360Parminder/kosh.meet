@@ -9,7 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@360parminder/db": "github:360Parminder/kosh.db#v1.0.0",
+    "@360parminder/db": "file:../../../Brave/shared-db/360parminder-db-1.0.0.tgz",
     "@livekit/components-react": "^2.9.24",
     "@livekit/components-styles": "^1.2.0",
     "livekit-client": "^2.22.3",
@@ -29,5 +29,11 @@
     "eslint-config-next": "16.3.6",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "allowScripts": {
+    "file:../../../../../Brave/shared-db": true,
+    "@prisma/client@5.22.0": true,
+    "file:/Users/parminder/Downloads/Brave/shared-db/360parminder-db-1.0.0.tgz": true,
+    "unrs-resolver@1.12.2": true
   }
 }

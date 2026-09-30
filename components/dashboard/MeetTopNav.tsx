@@ -64,33 +64,16 @@ export default function MeetTopNav({
 
   return (
     <header className="h-16 w-full px-4 md:px-6 flex items-center justify-between border-b border-[#e1e3e1] bg-white text-[#1f1f1f] shrink-0 sticky top-0 z-30">
-      {/* Left: Google Meet Logo & Wordmark */}
+      {/* Left: Kosh Meet Logo & Wordmark */}
       <div className="flex items-center gap-3">
         <Link href="/" className="flex items-center gap-2.5 no-underline group select-none">
-          {/* Authentic Google Meet Camera Icon */}
-          <div className="w-10 h-8 flex items-center justify-center relative">
-            <svg viewBox="0 0 87.3 78" className="w-9 h-8">
-              <path
-                d="m43.7 0c-8.9 0-16.1 7.2-16.1 16.1v4.7l16.1 12 16.1-12v-4.7c0-8.9-7.2-16.1-16.1-16.1z"
-                fill="#00832d"
-              />
-              <path
-                d="m43.7 32.8-16.1-12v26.9l16.1 12 16.1-12v-26.9z"
-                fill="#0066da"
-              />
-              <path
-                d="m27.6 47.7v14.2c0 8.9 7.2 16.1 16.1 16.1s16.1-7.2 16.1-16.1v-14.2l-16.1 12z"
-                fill="#e53935"
-              />
-              <path
-                d="m59.8 20.8 27.5-20.8v78l-27.5-20.8z"
-                fill="#ffb700"
-              />
-            </svg>
+          {/* Kosh Meet Icon */}
+          <div className="w-9 h-9 flex items-center justify-center bg-[#0b57d0] rounded-lg text-white">
+            <Video className="w-5 h-5" />
           </div>
 
           <span className="text-[21px] font-normal tracking-tight text-[#444746] font-sans">
-            Google <span className="font-normal text-[#1f1f1f]">Meet</span>
+            Kosh <span className="font-normal text-[#1f1f1f]">Meet</span>
           </span>
         </Link>
       </div>
@@ -137,7 +120,7 @@ export default function MeetTopNav({
             <span>New</span>
           </button>
 
-          {/* Google Meet Dropdown Menu */}
+          {/* Meet Dropdown Menu */}
           {isDropdownOpen && (
             <div className="absolute left-0 sm:right-0 sm:left-auto top-13 w-64 bg-white rounded-2xl shadow-xl border border-[#e1e3e1] py-2 z-50 animate-fade-in text-[#1f1f1f]">
               <button
@@ -214,7 +197,7 @@ export default function MeetTopNav({
           Upgrade
         </button>
 
-        {/* Google Apps 9-Dot Menu */}
+        {/* Apps Menu */}
         <button
           type="button"
           className="w-10 h-10 rounded-full flex items-center justify-center text-[#5f6368] hover:bg-[#f0f4f9] hover:text-[#1f1f1f] transition-colors"
@@ -229,12 +212,12 @@ export default function MeetTopNav({
             type="button"
             onClick={() => setIsAccountOpen((prev) => !prev)}
             className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#3e2723] to-[#5d4037] border border-white shadow-xs flex items-center justify-center text-white font-semibold text-sm cursor-pointer select-none ring-2 ring-transparent hover:ring-[#d3e3fd] transition-all"
-            title="Google Account"
+            title="Account"
           >
             {currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'P'}
           </button>
 
-          {/* Google Account Profile Dropdown */}
+          {/* Account Profile Dropdown */}
           {isAccountOpen && (
             <div className="absolute right-0 top-12 w-76 bg-white rounded-3xl shadow-2xl border border-[#dadce0] p-5 z-50 animate-fade-in text-[#1f1f1f]">
               <div className="flex flex-col items-center text-center pb-4 border-b border-[#e1e3e1]">
@@ -249,7 +232,7 @@ export default function MeetTopNav({
                 </div>
 
                 <div className="mt-3.5 px-4 py-1.5 rounded-full border border-[#dadce0] text-xs font-medium text-[#1f1f1f] hover:bg-[#f8fafd] transition-colors cursor-pointer">
-                  Manage your Google Account
+                  Manage your Account
                 </div>
               </div>
 

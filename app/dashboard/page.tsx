@@ -334,7 +334,7 @@ export default function DashboardPage() {
         onClose={() => setIsSettingsModalOpen(false)}
       />
 
-      {/* Google Meet Top Navigation Bar */}
+      {/* Top Navigation Bar */}
       <MeetTopNav
         onStartInstant={handleStartInstant}
         onCreateLater={handleCreateLater}
@@ -428,21 +428,21 @@ export default function DashboardPage() {
 
               {/* Row 2: Premium Meet Features Promo Banner */}
               <div className="w-full border border-[#e1e3e1] rounded-2xl p-4 sm:p-5 bg-white shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-                {/* Left: Google 1 / AI badge & text */}
+                {/* Left: Pro badge & text */}
                 <div className="flex items-center gap-3.5">
-                  {/* Google "1" / AI Circle Icon */}
+                  {/* Pro Circle Icon */}
                   <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-blue-500 p-0.5 flex items-center justify-center shrink-0">
                     <div className="w-full h-full bg-white rounded-full flex items-center justify-center text-[#0b57d0] font-bold text-xs">
-                      1
+                      <Sparkles className="w-4 h-4" />
                     </div>
                   </div>
 
                   <div>
                     <h2 className="text-sm font-semibold text-[#1f1f1f]">
-                      Unlock premium Meet features
+                      Unlock premium Kosh Meet features
                     </h2>
                     <p className="text-xs text-[#444746] mt-0.5">
-                      Enjoy longer group video calls, noise cancellation and more with a Google AI Plus 2 TB plan.
+                      Enjoy longer group video calls, noise cancellation and more with a Kosh Pro plan.
                     </p>
                   </div>
                 </div>

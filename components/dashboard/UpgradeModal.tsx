@@ -23,8 +23,8 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
               </div>
             </div>
             <div>
-              <h2 className="text-xl font-normal text-[#1f1f1f]">Google AI Plus • 2 TB Plan</h2>
-              <p className="text-xs text-[#444746]">Unlock premium Google Meet video capabilities</p>
+              <h2 className="text-xl font-normal text-[#1f1f1f]">Kosh Pro • 2 TB Plan</h2>
+              <p className="text-xs text-[#444746]">Unlock premium Kosh Meet video capabilities</p>
             </div>
           </div>
           <button
@@ -57,7 +57,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
             <HardDrive className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
             <div>
               <div className="text-sm font-medium text-[#1f1f1f]">2 TB Cloud Storage & Recordings</div>
-              <div className="text-xs text-[#444746]">Record meetings directly to Google Drive with automated Gemini transcripts.</div>
+              <div className="text-xs text-[#444746]">Record meetings directly to Kosh Drive with automated AI transcripts.</div>
             </div>
           </div>
 

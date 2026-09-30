@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, EyeOff, Loader2, Sparkles, Check, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Sparkles, Check, AlertCircle, Video } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -60,34 +60,17 @@ export default function LoginPage() {
     <div className="relative z-50 min-h-screen w-full bg-[#f0f4f9] text-[#1f1f1f] flex flex-col justify-between items-center p-4 sm:p-6 font-sans select-none">
       {/* Centered Sign-In Card */}
       <div className="my-auto w-full max-w-[448px] bg-white rounded-3xl p-8 sm:p-10 border border-[#dadce0] shadow-sm flex flex-col">
-        {/* Google Meet Logo & Header */}
+        {/* Kosh Meet Logo & Header */}
         <div className="flex flex-col items-start mb-6">
-          <div className="w-12 h-10 mb-4 flex items-center">
-            <svg viewBox="0 0 87.3 78" className="w-11 h-10">
-              <path
-                d="m43.7 0c-8.9 0-16.1 7.2-16.1 16.1v4.7l16.1 12 16.1-12v-4.7c0-8.9-7.2-16.1-16.1-16.1z"
-                fill="#00832d"
-              />
-              <path
-                d="m43.7 32.8-16.1-12v26.9l16.1 12 16.1-12v-26.9z"
-                fill="#0066da"
-              />
-              <path
-                d="m27.6 47.7v14.2c0 8.9 7.2 16.1 16.1 16.1s16.1-7.2 16.1-16.1v-14.2l-16.1 12z"
-                fill="#e53935"
-              />
-              <path
-                d="m59.8 20.8 27.5-20.8v78l-27.5-20.8z"
-                fill="#ffb700"
-              />
-            </svg>
+          <div className="w-12 h-12 mb-4 flex items-center justify-center bg-[#0b57d0] rounded-xl text-white">
+            <Video className="w-7 h-7" />
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-normal text-[#1f1f1f] tracking-tight">
             Sign in
           </h1>
           <p className="text-sm text-[#444746] mt-1.5 font-normal">
-            to continue to <span className="font-medium text-[#1f1f1f]">Google Meet</span>
+            to continue to <span className="font-medium text-[#1f1f1f]">Kosh Meet</span>
           </p>
         </div>
 
