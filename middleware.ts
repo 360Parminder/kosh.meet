@@ -25,8 +25,10 @@ export function middleware(request: NextRequest) {
   // Define protected routes pattern if needed. Here we assume /rooms/ is protected.
   if (path.startsWith('/rooms') && !token) {
     // Redirect to kosh login or return 401
-    // Since kosh is the single auth service, redirect to the kosh login page
-    return NextResponse.redirect(new URL('https://kosh.uno/login', request.url));
+    const loginUrl = process.env.NODE_ENV === 'development' 
+      ? 'http://localhost:3000/login' 
+      : 'https://kosh.uno/login';
+    return NextResponse.redirect(new URL(loginUrl, request.url));
   }
   
   return NextResponse.next();

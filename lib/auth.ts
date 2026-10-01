@@ -19,7 +19,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get(SESSION_COOKIE_NAME);
   if (!sessionCookie?.value) return null;
-  
+
   const result = await verifyToken(sessionCookie.value);
   if (!result.valid || !result.user) return null;
   

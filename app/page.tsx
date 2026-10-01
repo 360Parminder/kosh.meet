@@ -9,17 +9,38 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedUser = localStorage.getItem('kosh_meet_user');
-      if (savedUser) {
-        try {
-          JSON.parse(savedUser);
-          router.push('/dashboard');
-        } catch (e) {
-          // invalid JSON, ignore
+    async function checkAuth() {
+      // 1. Try local storage first (fastest)
+      if (typeof window !== 'undefined') {
+        const savedUser = localStorage.getItem('kosh_meet_user');
+        if (savedUser) {
+          try {
+            JSON.parse(savedUser);
+            router.push('/dashboard');
+            return;
+          } catch (e) {
+            // invalid JSON, ignore
+          }
         }
       }
+      
+      // 2. If no local storage, ask the server (catches cross-domain SSO if middleware was bypassed by cache)
+      try {
+        const res = await fetch('/api/auth/me');
+        const data = await res.json();
+        if (data.authenticated && data.user) {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('kosh_meet_user', JSON.stringify(data.user));
+            localStorage.setItem('kosh_meet_username', data.user.name || data.user.username);
+          }
+          router.push('/dashboard');
+        }
+      } catch (e) {
+        // Not authenticated or error
+      }
     }
+
+    checkAuth();
   }, [router]);
 
   return (

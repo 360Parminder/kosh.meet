@@ -9,8 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@360parminder/auth": "github:360Parminder/kosh.auth#v1.0.0",
-    "@360parminder/db": "file:../../../Brave/shared-db/360parminder-db-1.0.0.tgz",
+    "@360parminder/auth": "file:../shared-auth/360parminder-auth-1.0.0.tgz",
+    "@360parminder/db": "file:../shared-db/360parminder-db-1.0.0.tgz",
     "@livekit/components-react": "^2.9.24",
     "@livekit/components-styles": "^1.2.0",
     "bcryptjs": "^3.0.3",
@@ -32,11 +32,5 @@
     "eslint-config-next": "16.3.6",
     "tailwindcss": "^4",
     "typescript": "^5"
-  },
-  "allowScripts": {
-    "file:../../../../../Brave/shared-db": true,
-    "@prisma/client@5.22.0": true,
-    "file:/Users/parminder/Downloads/Brave/shared-db/360parminder-db-1.0.0.tgz": true,
-    "unrs-resolver@1.12.2": true
   }
 }
