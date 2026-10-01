@@ -9,8 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@360parminder/auth": "file:../shared-auth/360parminder-auth-1.0.0.tgz",
-    "@360parminder/db": "file:../shared-db/360parminder-db-1.0.0.tgz",
+  
     "@livekit/components-react": "^2.9.24",
     "@livekit/components-styles": "^1.2.0",
     "bcryptjs": "^3.0.3",
