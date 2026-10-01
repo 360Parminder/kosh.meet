@@ -9,10 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
-  
+    "@360parminder/auth": "github:360Parminder/kosh.auth#3e2c52a0ea8bb22d832b675db023cbecaf697604",
+    "@360parminder/db": "github:360Parminder/kosh.db#121151710084b8b7211f088a327da87a66d51e14",
     "@livekit/components-react": "^2.9.24",
     "@livekit/components-styles": "^1.2.0",
-    "bcryptjs": "^3.0.3",
     "livekit-client": "^2.22.3",
     "livekit-server-sdk": "^2.19.1",
     "lucide-react": "^1.48.0",
@@ -21,9 +21,13 @@
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
+  "overrides": {
+    "@360parminder/auth": {
+      "@360parminder/db": "github:360Parminder/kosh.db#121151710084b8b7211f088a327da87a66d51e14"
+    }
+  },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
